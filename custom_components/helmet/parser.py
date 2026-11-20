@@ -19,6 +19,18 @@ _READY_RE = re.compile(
     r"finns att hämta",
     re.IGNORECASE,
 )
+# "Jonossa: 3", "Sija jonossa 3 / 12", "Position in queue: 3", "Plats i kön 3".
+# The number must not be part of a date (24.11.2026), so "Jonossa ... 24.11." is skipped.
+_QUEUE_RE = re.compile(
+    r"(?:jono\w*|queue|kö\w*|köplats)[^\d.\n]{0,25}?(?<![\d.])(\d{1,4})(?![\d]|\.\d)"
+    r"(?:\s*(?:/|of|kautta|av)\s*(\d{1,4}))?",
+    re.IGNORECASE,
+)
+# "3. jonossa", "3rd in queue"
+_QUEUE_ORDINAL_RE = re.compile(
+    r"(?<![\d.])(\d{1,4})(?:\.|st|nd|rd|th)\s+(?:jonossa|in (?:the )?queue|i kön)",
+    re.IGNORECASE,
+)
 _ROW_SELECTORS = ".myresearch-row, li.result, div.result, tr.myresearch-row"
 _TITLE_SELECTORS = ".record-title, a.title, .title, h2 a, h3 a, h2, h3"
 
@@ -38,6 +50,8 @@ class Hold:
     title: str
     ready: bool
     pickup_by: date | None
+    queue_position: int | None = None
+    queue_length: int | None = None
 
 
 def parse_csrf(html: str) -> str | None:
@@ -96,6 +110,15 @@ def _find_date(text: str, label: re.Pattern[str]) -> date | None:
         return None
 
 
+def _queue(text: str) -> tuple[int | None, int | None]:
+    """Queue position (and length, when shown) of a waiting reservation."""
+    match = _QUEUE_RE.search(text)
+    if match:
+        return int(match.group(1)), int(match.group(2)) if match.group(2) else None
+    match = _QUEUE_ORDINAL_RE.search(text)
+    return (int(match.group(1)), None) if match else (None, None)
+
+
 def _any_date(text: str) -> date | None:
     return _find_date(text, re.compile(r"^"))
 
@@ -134,7 +157,8 @@ def parse_holds(html: str) -> list[Hold]:
     for title, text in _rows(BeautifulSoup(html, "html.parser")):
         ready = bool(_READY_RE.search(text))
         pickup_by = _find_date(text, _PICKUP_BY_RE) if ready else None
-        holds.append(Hold(title, ready, pickup_by))
+        position, length = (None, None) if ready else _queue(text)
+        holds.append(Hold(title, ready, pickup_by, position, length))
     holds.sort(
         key=lambda hold: (not hold.ready, hold.pickup_by is None, hold.pickup_by or date.max)
     )

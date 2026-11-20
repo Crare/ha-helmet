@@ -23,6 +23,7 @@ const TEXT = {
     ready: "Ready",
     pickupBy: (d) => `pick up by ${d}`,
     queue: "In queue",
+    queueAt: (p, n) => `In queue, #${p}${n ? ` of ${n}` : ""}`,
   },
   fi: {
     loans: "Kirjaston lainat",
@@ -39,6 +40,7 @@ const TEXT = {
     ready: "Noudettavissa",
     pickupBy: (d) => `nouda viim. ${d}`,
     queue: "Jonossa",
+    queueAt: (p, n) => `Jonosija ${p}${n ? `/${n}` : ""}`,
   },
 };
 
@@ -194,7 +196,10 @@ class HelmetReservationsCard extends HelmetBaseCard {
     const rows = sensor.items
       .map((hold) => {
         if (!hold.ready) {
-          return `<tr><td>${escapeHtml(hold.title)}</td><td class="queue">⏳ ${escapeHtml(t.queue)}</td></tr>`;
+          const position = Number.isInteger(hold.queue_position) ? hold.queue_position : null;
+          const length = Number.isInteger(hold.queue_length) ? hold.queue_length : null;
+          const label = position ? t.queueAt(position, length) : t.queue;
+          return `<tr><td>${escapeHtml(hold.title)}</td><td class="queue">⏳ ${escapeHtml(label)}</td></tr>`;
         }
         const by = parseDate(hold.pickup_by);
         const status = by ? `${t.ready}, ${t.pickupBy(shortDate(by, false))}` : t.ready;

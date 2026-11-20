@@ -90,3 +90,25 @@ def test_invalid_date_is_ignored():
 def test_alerts():
     html = '<div class="alert alert-danger">Tunnus/salasana ei  täsmää.</div><div class="alert"> </div>'
     assert parser.parse_alerts(html) == ["Tunnus/salasana ei täsmää."]
+
+
+def _queue_of(text):
+    html = f'<li class="result"><a class="title">T</a> {text}</li>'
+    hold = parser.parse_holds(html)[0]
+    return hold.queue_position, hold.queue_length
+
+
+def test_queue_position_wordings():
+    assert _queue_of("Jonossa: 4") == (4, None)
+    assert _queue_of("Sija jonossa 3 / 12") == (3, 12)
+    assert _queue_of("Sijasi varausjonossa: 2") == (2, None)
+    assert _queue_of("Position in queue: 7 of 20") == (7, 20)
+    assert _queue_of("Plats i kön: 5") == (5, None)
+    assert _queue_of("3. jonossa") == (3, None)
+    assert _queue_of("Queue position 1") == (1, None)
+
+
+def test_queue_position_ignores_dates_and_ready():
+    assert _queue_of("Jonossa Varattu 24.11.2026") == (None, None)
+    assert _queue_of("Jonossa. Voimassa 1.6.2027") == (None, None)
+    assert _queue_of("Noudettavissa. Noudettava viimeistään 28.11.2026 Jonossa: 1") == (None, None)

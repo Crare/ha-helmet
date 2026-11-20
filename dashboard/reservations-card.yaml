@@ -20,7 +20,7 @@ content: |-
   {%- if h.ready -%}
   | **{{ h.title }}** | 📚 Ready{% if h.pickup_by %}, pick up by {{ strptime(h.pickup_by, '%Y-%m-%d').strftime('%-d.%-m.') }}{% endif %} |
   {% else -%}
-  | {{ h.title }} | ⏳ In queue |
+  | {{ h.title }} | ⏳ In queue{% if h.queue_position %}, #{{ h.queue_position }}{% if h.queue_length %} of {{ h.queue_length }}{% endif %}{% endif %} |
   {% endif -%}
   {%- endfor -%}
   {%- else -%}
