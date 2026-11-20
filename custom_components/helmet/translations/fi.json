@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Helmet-kirjastokortti",
+        "description": "Yksi merkintä per kirjastokortti: lisää integraatio uudelleen jokaiselle henkilölle. Käytä samaa kortin numeroa ja PIN-koodia kuin helmet.finna.fi-palvelussa.",
+        "data": {
+          "name": "Nimi",
+          "username": "Kirjastokortin numero",
+          "password": "PIN-koodi"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Helmet-kirjastokortti",
+        "description": "Helmet hylkäsi tallennetun PIN-koodin. Anna nykyinen PIN-koodi.",
+        "data": {
+          "password": "PIN-koodi"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Kortin numero tai PIN-koodi on väärä.",
+      "cannot_connect": "helmet.finna.fi-palveluun ei saatu yhteyttä. Yritä myöhemmin uudelleen."
+    },
+    "abort": {
+      "already_configured": "Tämä kirjastokortti on jo lisätty.",
+      "reauth_successful": "PIN-koodi päivitetty."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "loans": {
+        "name": "Lainat"
+      },
+      "next_due": {
+        "name": "Seuraava eräpäivä"
+      },
+      "overdue": {
+        "name": "Myöhässä"
+      },
+      "ready_for_pickup": {
+        "name": "Noudettavissa"
+      },
+      "next_pickup_deadline": {
+        "name": "Seuraava noudon takaraja"
+      }
+    }
+  }
+}

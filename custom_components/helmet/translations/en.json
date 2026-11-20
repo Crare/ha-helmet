@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Helmet library card",
+        "description": "One entry per library card: add the integration again for each person. Use the same card number and PIN as on helmet.finna.fi.",
+        "data": {
+          "name": "Name",
+          "username": "Library card number",
+          "password": "PIN"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Helmet library card",
+        "description": "Helmet rejected the saved PIN. Enter the current one.",
+        "data": {
+          "password": "PIN"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Card number or PIN was rejected.",
+      "cannot_connect": "Could not read helmet.finna.fi. Try again later."
+    },
+    "abort": {
+      "already_configured": "This library card is already added.",
+      "reauth_successful": "PIN updated."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "loans": {
+        "name": "Loans"
+      },
+      "next_due": {
+        "name": "Next due date"
+      },
+      "overdue": {
+        "name": "Overdue"
+      },
+      "ready_for_pickup": {
+        "name": "Ready for pickup"
+      },
+      "next_pickup_deadline": {
+        "name": "Next pickup deadline"
+      }
+    }
+  }
+}
