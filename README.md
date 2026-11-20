@@ -216,6 +216,13 @@ python -m pip install beautifulsoup4 pytest
 python -m pytest tests
 ```
 
+## Icon
+
+The integration's icon (`custom_components/helmet/brand/`, source in
+[`docs/icon.svg`](docs/icon.svg)) is an original drawing of a house roofline over an
+open book. It does not use the Helmet or Home Assistant logos. Home Assistant 2026.x
+shows it from the integration's own `brand` folder.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
