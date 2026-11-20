@@ -53,6 +53,16 @@ def is_login_form(html: str) -> bool:
     return BeautifulSoup(html, "html.parser").select_one("form#loginForm") is not None
 
 
+def parse_alerts(html: str) -> list[str]:
+    """Texts of the site's alert boxes, e.g. its login error message."""
+    soup = BeautifulSoup(html, "html.parser")
+    return [
+        " ".join(tag.get_text(" ", strip=True).split())
+        for tag in soup.select(".alert, .flash-message")
+        if tag.get_text(strip=True)
+    ]
+
+
 def _counts(payload: dict, keys: tuple[str, ...]) -> dict[str, int] | None:
     data = payload.get("data")
     if not isinstance(data, dict):

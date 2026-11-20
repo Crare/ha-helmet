@@ -85,3 +85,8 @@ def test_invalid_date_is_ignored():
     assert parser.parse_loans(
         '<div class="result"><a class="title">X</a> Eräpäivä 31.2.2026</div>'
     ) == [parser.Loan("X", None)]
+
+
+def test_alerts():
+    html = '<div class="alert alert-danger">Tunnus/salasana ei  täsmää.</div><div class="alert"> </div>'
+    assert parser.parse_alerts(html) == ["Tunnus/salasana ei täsmää."]

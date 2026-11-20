@@ -10,6 +10,7 @@ import aiohttp
 from .const import BASE_URL, LIBRARY_TARGET
 from .parser import (
     Hold,
+    parse_alerts,
     Loan,
     is_login_form,
     parse_csrf,
@@ -20,10 +21,10 @@ from .parser import (
 )
 
 _TIMEOUT = aiohttp.ClientTimeout(total=30)
-_HEADERS = {
-    "User-Agent": "HomeAssistant-Helmet/0.1 (+https://github.com/Crare/ha-helmet)",
-    "Accept-Language": "fi",
-}
+# helmet.finna.fi answers 403 to crawler-style user agents (brackets, links,
+# "compatible;", default Python/curl ones). A plain product token is accepted
+# and still says honestly which client this is.
+_HEADERS = {"User-Agent": "HomeAssistant-Helmet/0.1.1", "Accept-Language": "fi"}
 
 
 class HelmetError(Exception):
@@ -65,8 +66,11 @@ class HelmetClient:
                 finally:
                     await self._get(session, "/MyResearch/Logout")
         except aiohttp.ClientResponseError as err:
-            if err.status in (401, 403):
-                raise HelmetAuthError("Not signed in") from err
+            if err.status == 403:
+                raise HelmetError(
+                    f"{BASE_URL} refused the request (403); it may be blocking "
+                    "this client"
+                ) from err
             raise HelmetError(f"{BASE_URL} answered {err.status}") from err
         except aiohttp.ClientError as err:
             raise HelmetError(f"Could not reach {BASE_URL}: {err}") from err
@@ -97,8 +101,10 @@ class HelmetClient:
         }
         async with session.post(f"{BASE_URL}/MyResearch/Home", data=form) as resp:
             resp.raise_for_status()
-            if is_login_form(await resp.text()):
-                raise HelmetAuthError("Library card number or PIN was rejected")
+            page = await resp.text()
+            if is_login_form(page):
+                message = "; ".join(parse_alerts(page)) or "no message"
+                raise HelmetAuthError(f"Helmet did not accept the login: {message}")
 
     async def _read(self, session: aiohttp.ClientSession) -> HelmetData:
         loan_counts = parse_loan_summary(await self._ajax(session, "getUserTransactions"))

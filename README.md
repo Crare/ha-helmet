@@ -99,8 +99,17 @@ actions:
 
 ## Reporting a problem
 
-If the lists are empty or wrong, open an issue with the warning from the Home
-Assistant log. **Never post your card number, PIN or saved pages that contain your
+To check a card outside Home Assistant, run the check script on your own computer.
+It asks for the card number and PIN without showing them and prints only whether
+the login worked and how many items it read, which is safe to share:
+
+```bash
+python -m pip install aiohttp beautifulsoup4
+python scripts/check_login.py
+```
+
+If the lists are empty or wrong, open an issue with that output or the warning from
+the Home Assistant log. **Never post your card number, PIN or saved pages that contain your
 name or loans.**
 
 ## Development

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Mapping
 from typing import Any
 
@@ -12,6 +13,8 @@ from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 
 from .api import HelmetAuthError, HelmetClient, HelmetError
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 _SCHEMA = vol.Schema(
     {
@@ -26,9 +29,11 @@ async def _check(username: str, password: str) -> str | None:
     """Return an error key, or None when the login works."""
     try:
         await HelmetClient(username, password).fetch()
-    except HelmetAuthError:
+    except HelmetAuthError as err:
+        _LOGGER.warning("Helmet login failed: %s", err)
         return "invalid_auth"
-    except HelmetError:
+    except HelmetError as err:
+        _LOGGER.warning("Could not read Helmet: %s", err)
         return "cannot_connect"
     return None
 
