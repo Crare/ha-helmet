@@ -57,8 +57,7 @@ Entity IDs follow the name you gave, e.g. `sensor.anna_loans`.
 
 ## Dashboard cards
 
-The integration includes two cards. After installing and restarting, open
-Edit dashboard → **Add card** and search for **Helmet**:
+The integration includes two ready-made cards:
 
 - **Helmet loans** (`custom:helmet-loans-card`): every library card's loans with due
   date and days left (orange within 3 days, red when overdue).
@@ -68,18 +67,113 @@ Edit dashboard → **Add card** and search for **Helmet**:
 
 They find all Helmet library cards by themselves, use each card's name as the
 heading, and show Finnish or English text depending on your Home Assistant language.
-The only option is `title`:
+
+### Adding the cards to a dashboard
+
+1. Install the integration and add at least one library card (see [Install](#install)
+   and [Setup](#setup)).
+2. Restart Home Assistant once after installing or updating. The cards are loaded at
+   startup, so they are not available before the restart.
+3. Open the dashboard and select ✏️ **Edit dashboard** (top right).
+4. Select **Add card**, type **Helmet** in the search box, and pick **Helmet loans**
+   or **Helmet reservations**.
+5. Select **Save**. Repeat for the other card.
+
+The only option is `title`. To change it, open the card's code editor
+(**Show code editor**):
 
 ```yaml
 type: custom:helmet-loans-card
 title: Kirjaston lainat
 ```
 
-If a browser keeps showing an old version of the cards after an update, reload the
-page (on the phone app: Settings → Companion app → Debugging → Reset frontend cache).
+**If the cards are not in the list:** check that Home Assistant has been restarted
+since the update and that HACS shows the latest version, then reload the page. On the
+phone app, clear its cache under Settings → Companion app → Debugging → Reset
+frontend cache.
 
-Plain Markdown versions of both cards, without the integration's frontend file, are
-in [`dashboard/`](dashboard).
+**If a card says no library cards were found:** the integration has no library card
+added yet, or it could not update. Check Settings → Devices & services → Helmet
+library loans.
+
+## Making your own cards
+
+Every library card gets the sensors listed under [Sensors](#sensors-per-card). Their
+names follow the name you gave the library card, e.g. `sensor.anna_loans`. To see
+the exact entity IDs, open Developer tools → **States** and search for `helmet` or
+the name. The lists (titles, due dates, reservations) are in the sensors'
+attributes, which templates can read.
+
+Try templates in Developer tools → **Template** before putting them on a card.
+
+### A single value as a tile
+
+The simplest card shows one sensor. Edit dashboard → Add card → **Tile** and pick,
+for example, `sensor.anna_next_due_date` or `sensor.anna_ready_for_pickup`. Or in
+the code editor:
+
+```yaml
+type: tile
+entity: sensor.anna_next_due_date
+name: Anna's next due date
+```
+
+### A notice only when something is ready for pickup
+
+A conditional card that stays hidden until a reservation is waiting at the library:
+
+```yaml
+type: conditional
+conditions:
+  - condition: numeric_state
+    entity: sensor.anna_ready_for_pickup
+    above: 0
+card:
+  type: markdown
+  content: |-
+    📚 **Anna has {{ states('sensor.anna_ready_for_pickup') }} reservation(s) ready for pickup:**
+    {% for h in state_attr('sensor.anna_ready_for_pickup', 'holds') or [] %}
+    - {{ h.title }}{% if h.pickup_by %} (by {{ strptime(h.pickup_by, '%Y-%m-%d').strftime('%-d.%-m.') }}){% endif %}
+    {%- endfor %}
+```
+
+### Your own list with a Markdown card
+
+A Markdown card can list anything from the attributes. This one shows every loan,
+from all library cards, that is due within a week:
+
+```yaml
+type: markdown
+title: Due this week
+content: |-
+  {%- set ns = namespace(rows=[]) -%}
+  {%- for id in integration_entities('helmet') -%}
+  {%- for l in state_attr(id, 'loans') or [] if l.due_date -%}
+  {%- set days = (strptime(l.due_date, '%Y-%m-%d').date() - now().date()).days -%}
+  {%- if days <= 7 -%}
+  {%- set ns.rows = ns.rows + [(days, l.title, l.due_date)] -%}
+  {%- endif -%}
+  {%- endfor -%}
+  {%- endfor -%}
+  {%- for days, title, due in ns.rows | sort %}
+  - {{ title }}: {{ 'overdue' if days < 0 else 'today' if days == 0 else 'in ' ~ days ~ ' d' }}
+  {%- else %}
+  Nothing due this week 🎉
+  {%- endfor %}
+```
+
+Useful pieces for your own templates:
+
+| Template | Gives |
+| --- | --- |
+| `integration_entities('helmet')` | all Helmet sensors |
+| `state_attr('sensor.anna_loans', 'loans')` | list of loans: `title`, `due_date` (`YYYY-MM-DD`) |
+| `state_attr('sensor.anna_reservations', 'holds')` | list of reservations: `title`, `ready`, `pickup_by`, `queue_position`, `queue_length`, `pickup_location` |
+| `states('sensor.anna_overdue')` | number of overdue loans |
+| `strptime(x, '%Y-%m-%d')` | turns a date attribute into a date you can compare or format |
+
+More Markdown versions of the cards, which also work without the integration's
+card file, are in [`dashboard/`](dashboard).
 
 ## Notification when a reservation is ready
 
