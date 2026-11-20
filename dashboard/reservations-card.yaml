@@ -1,0 +1,25 @@
+# Markdown card listing each person's reservations; ones ready for pickup come
+# first with the last pickup day. Edit `people` as in loans-card.yaml.
+type: markdown
+title: Library reservations
+content: |-
+  {%- set people = [('anna', 'Anna'), ('mikko', 'Mikko'), ('ella', 'Ella')] -%}
+  {%- for id, name in people -%}
+  {%- set holds = state_attr('sensor.' ~ id ~ '_reservations', 'holds') or [] %}
+
+  ### {{ name }} ({{ holds | count }})
+
+  {% if holds -%}
+  | Title | Status |
+  |:--|:--|
+  {% for h in holds -%}
+  {%- if h.ready -%}
+  | **{{ h.title }}** | 📚 Ready{% if h.pickup_by %}, pick up by {{ strptime(h.pickup_by, '%Y-%m-%d').strftime('%-d.%-m.') }}{% endif %} |
+  {% else -%}
+  | {{ h.title }} | ⏳ In queue |
+  {% endif -%}
+  {%- endfor -%}
+  {%- else -%}
+  No reservations
+  {%- endif %}
+  {% endfor -%}

@@ -1,0 +1,28 @@
+# Markdown card listing each person's loans with due dates.
+# Edit `people`: the first value is the start of the sensor's entity ID
+# (sensor.anna_loans -> anna), the second is the name shown.
+type: markdown
+title: Library loans
+content: |-
+  {%- set people = [('anna', 'Anna'), ('mikko', 'Mikko'), ('ella', 'Ella')] -%}
+  {%- for id, name in people -%}
+  {%- set loans = state_attr('sensor.' ~ id ~ '_loans', 'loans') or [] %}
+
+  ### {{ name }} ({{ loans | count }})
+
+  {% if loans -%}
+  | Title | Due | |
+  |:--|:--|:--|
+  {% for l in loans -%}
+  {%- if l.due_date -%}
+  {%- set due = strptime(l.due_date, '%Y-%m-%d') -%}
+  {%- set days = (due.date() - now().date()).days -%}
+  | {{ l.title }} | {{ due.strftime('%-d.%-m.%Y') }} | {% if days < 0 %}🔴 overdue{% elif days == 0 %}🟠 today{% elif days <= 3 %}🟠 {{ days }} d{% else %}{{ days }} d{% endif %} |
+  {% else -%}
+  | {{ l.title }} | – | |
+  {% endif -%}
+  {%- endfor -%}
+  {%- else -%}
+  No loans
+  {%- endif %}
+  {% endfor -%}

@@ -38,6 +38,9 @@
       "overdue": {
         "name": "Overdue"
       },
+      "reservations": {
+        "name": "Reservations"
+      },
       "ready_for_pickup": {
         "name": "Ready for pickup"
       },

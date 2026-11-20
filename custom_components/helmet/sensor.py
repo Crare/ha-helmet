@@ -53,6 +53,19 @@ def _ready_list(data: HelmetData) -> dict[str, Any]:
     }
 
 
+def _hold_list(data: HelmetData) -> dict[str, Any]:
+    return {
+        "holds": [
+            {
+                "title": hold.title,
+                "ready": hold.ready,
+                "pickup_by": _iso(hold.pickup_by),
+            }
+            for hold in data.holds
+        ]
+    }
+
+
 SENSORS = (
     HelmetSensorDescription(
         key="loans",
@@ -75,6 +88,14 @@ SENSORS = (
         translation_key="overdue",
         icon="mdi:book-alert",
         value=lambda data: data.loans_overdue,
+    ),
+    HelmetSensorDescription(
+        key="reservations",
+        translation_key="reservations",
+        icon="mdi:book-clock",
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: len(data.holds),
+        attributes=_hold_list,
     ),
     HelmetSensorDescription(
         key="ready_for_pickup",

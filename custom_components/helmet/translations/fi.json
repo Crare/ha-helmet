@@ -38,6 +38,9 @@
       "overdue": {
         "name": "Myöhässä"
       },
+      "reservations": {
+        "name": "Varaukset"
+      },
       "ready_for_pickup": {
         "name": "Noudettavissa"
       },

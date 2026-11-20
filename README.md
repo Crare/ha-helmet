@@ -49,35 +49,22 @@ Entity IDs follow the name you gave, e.g. `sensor.anna_loans`.
 | Loans | number of loans | `loans`: list of `title`, `due_date`, soonest first |
 | Next due date | earliest due date | |
 | Overdue | number of overdue loans | |
+| Reservations | number of reservations | `holds`: list of `title`, `ready`, `pickup_by`, ready ones first |
 | Ready for pickup | reservations waiting at the library | `holds`: list of `title`, `pickup_by`; `waiting`: reservations still in the queue |
 | Next pickup deadline | earliest last pickup day | |
 
-## Dashboard card
+## Dashboard cards
 
-Add a Markdown card (Edit dashboard → Add card → Markdown) and paste the following.
-Change the names in `people` to match your sensors' entity IDs.
+Two ready-made Markdown cards are in [`dashboard/`](dashboard):
 
-```jinja
-{% set people = ['anna', 'mikko', 'ella'] %}
-{% for p in people %}
-## {{ p | capitalize }}
-{% set ready = state_attr('sensor.' ~ p ~ '_ready_for_pickup', 'holds') or [] %}
-{% if ready %}
-**Ready for pickup**
-{% for h in ready %}
-- 📚 {{ h.title }}{% if h.pickup_by %} — pick up by {{ as_timestamp(h.pickup_by) | timestamp_custom('%-d.%-m.') }}{% endif %}
-{% endfor %}
-{% endif %}
-{% set loans = state_attr('sensor.' ~ p ~ '_loans', 'loans') or [] %}
-**Loans ({{ loans | count }})**
-{% for l in loans %}
-{% set days = ((as_timestamp(l.due_date) - as_timestamp(today_at())) / 86400) | round(0) | int if l.due_date else none %}
-- {{ l.title }}{% if l.due_date %} — due {{ as_timestamp(l.due_date) | timestamp_custom('%-d.%-m.') }}{% if days is not none and days <= 3 %} ⚠️{% endif %}{% endif %}
-{% else %}
-- No loans
-{% endfor %}
-{% endfor %}
-```
+- [`loans-card.yaml`](dashboard/loans-card.yaml): each person's loans with due date
+  and days left (🟠 within 3 days, 🔴 overdue).
+- [`reservations-card.yaml`](dashboard/reservations-card.yaml): each person's
+  reservations, ready ones first with the last pickup day.
+
+To add one: Edit dashboard → Add card → **Manual**, paste the file's contents and
+change the `people` list at the top to your sensors' entity IDs and names
+(`sensor.anna_loans` → `('anna', 'Anna')`).
 
 ## Notification when a reservation is ready
 
@@ -104,8 +91,9 @@ It asks for the card number and PIN without showing them and prints only whether
 the login worked and how many items it read, which is safe to share:
 
 ```bash
-python -m pip install aiohttp beautifulsoup4
-python scripts/check_login.py
+python3 -m venv .venv
+.venv/bin/pip install aiohttp beautifulsoup4
+.venv/bin/python scripts/check_login.py
 ```
 
 If the lists are empty or wrong, open an issue with that output or the warning from
