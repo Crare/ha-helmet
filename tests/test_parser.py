@@ -112,3 +112,12 @@ def test_queue_position_ignores_dates_and_ready():
     assert _queue_of("Jonossa Varattu 24.11.2026") == (None, None)
     assert _queue_of("Jonossa. Voimassa 1.6.2027") == (None, None)
     assert _queue_of("Noudettavissa. Noudettava viimeistään 28.11.2026 Jonossa: 1") == (None, None)
+
+
+def test_queue_position_real_helmet_row():
+    # Wording from a real helmet.finna.fi Holds row (title and personal details removed).
+    row = (
+        "Valitse DVD Julkaisuvuosi: 2006 Noutopaikka: Kannelmäki / Gamlas "
+        "Luotu: 12.8.2026 Sijainti jonossa: 38 / 77 Muokkaa"
+    )
+    assert _queue_of(row) == (38, 77)
