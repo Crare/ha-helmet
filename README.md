@@ -4,6 +4,8 @@ Shows your [Helmet](https://helmet.finna.fi/) library loans with due dates, and
 reservations that are ready for pickup, as Home Assistant sensors. Add it once per
 library card, so a whole family can be followed on one dashboard.
 
+![Helmet loans and reservations cards with example data](docs/helmet-cards.png)
+
 > Unofficial. Not affiliated with or endorsed by the Helmet libraries or the National
 > Library of Finland.
 
