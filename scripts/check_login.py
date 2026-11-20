@@ -63,6 +63,8 @@ async def _run(show: bool, rows: bool) -> int:
     waiting = [hold for hold in data.holds if not hold.ready]
     print(f"Waiting reservations: {len(waiting)}, "
           f"with queue position {sum(1 for hold in waiting if hold.queue_position)}")
+    print(f"Reservations with pickup location: "
+          f"{sum(1 for hold in data.holds if hold.pickup_location)}")
     if show:
         for loan in data.loans:
             print(f"  loan  {loan.due_date or '?':<10}  {loan.title}")
@@ -72,7 +74,8 @@ async def _run(show: bool, rows: bool) -> int:
             else:
                 state = f"waiting, queue #{hold.queue_position or '?'}"
                 state += f" of {hold.queue_length}" if hold.queue_length else ""
-            print(f"  hold  {state:<30}  {hold.title}")
+            place = f"  @ {hold.pickup_location}" if hold.pickup_location else ""
+            print(f"  hold  {state:<30}  {hold.title}{place}")
     if rows and _holds_html:
         from bs4 import BeautifulSoup
 

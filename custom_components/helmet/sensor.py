@@ -62,6 +62,7 @@ def _hold_list(data: HelmetData) -> dict[str, Any]:
                 "pickup_by": _iso(hold.pickup_by),
                 "queue_position": hold.queue_position,
                 "queue_length": hold.queue_length,
+                "pickup_location": hold.pickup_location,
             }
             for hold in data.holds
         ]

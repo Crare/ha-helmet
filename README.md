@@ -49,7 +49,7 @@ Entity IDs follow the name you gave, e.g. `sensor.anna_loans`.
 | Loans | number of loans | `loans`: list of `title`, `due_date`, soonest first |
 | Next due date | earliest due date | |
 | Overdue | number of overdue loans | |
-| Reservations | number of reservations | `holds`: list of `title`, `ready`, `pickup_by`, `queue_position`, `queue_length`, ready ones first |
+| Reservations | number of reservations | `holds`: list of `title`, `ready`, `pickup_by`, `queue_position`, `queue_length`, `pickup_location`, ready ones first |
 | Ready for pickup | reservations waiting at the library | `holds`: list of `title`, `pickup_by`; `waiting`: reservations still in the queue |
 | Next pickup deadline | earliest last pickup day | |
 
@@ -62,7 +62,7 @@ Edit dashboard → **Add card** and search for **Helmet**:
   date and days left (orange within 3 days, red when overdue).
 - **Helmet reservations** (`custom:helmet-reservations-card`): every library card's
   reservations; ready ones first with the last pickup day, waiting ones with
-  their queue position.
+  their queue position; each with its pickup library.
 
 They find all Helmet library cards by themselves, use each card's name as the
 heading, and show Finnish or English text depending on your Home Assistant language.

@@ -65,6 +65,12 @@ const daysFromToday = (date) => {
 const shortDate = (date, withYear) =>
   `${date.getDate()}.${date.getMonth() + 1}.${withYear ? date.getFullYear() : ""}`;
 
+/** "Kannelmäki / Gamlas" → the name in the UI language (Swedish after the slash). */
+const placeName = (place, lang) => {
+  const parts = String(place || "").split(" / ");
+  return (lang === "sv" && parts[1]) || parts[0];
+};
+
 const STYLE = `
   .content { padding: 0 16px 16px; }
   .empty { color: var(--secondary-text-color); padding: 4px 0 8px; }
@@ -81,6 +87,7 @@ const STYLE = `
   .late { color: var(--error-color, #db4437); font-weight: 500; }
   .ready { color: var(--success-color, #43a047); font-weight: 500; }
   .queue { color: var(--secondary-text-color); }
+  .place { display: block; color: var(--secondary-text-color); font-size: 0.85em; margin-top: 2px; }
 `;
 
 class HelmetBaseCard extends HTMLElement {
@@ -103,9 +110,12 @@ class HelmetBaseCard extends HTMLElement {
     return {};
   }
 
+  get _lang() {
+    return (this._hass?.locale?.language || this._hass?.language || "en").slice(0, 2);
+  }
+
   get _text() {
-    const lang = (this._hass?.locale?.language || this._hass?.language || "en").slice(0, 2);
-    return TEXT[lang] || TEXT.en;
+    return TEXT[this._lang] || TEXT.en;
   }
 
   /** Helmet sensors carrying `attr`, with a display name per library card. */
@@ -195,15 +205,18 @@ class HelmetReservationsCard extends HelmetBaseCard {
     if (!sensor.items.length) return `${this._heading(sensor)}<div class="empty">${escapeHtml(t.noReservations)}</div>`;
     const rows = sensor.items
       .map((hold) => {
+        const place = hold.pickup_location
+          ? `<span class="place">📍 ${escapeHtml(placeName(hold.pickup_location, this._lang))}</span>`
+          : "";
         if (!hold.ready) {
           const position = Number.isInteger(hold.queue_position) ? hold.queue_position : null;
           const length = Number.isInteger(hold.queue_length) ? hold.queue_length : null;
           const label = position ? t.queueAt(position, length) : t.queue;
-          return `<tr><td>${escapeHtml(hold.title)}</td><td class="queue">⏳ ${escapeHtml(label)}</td></tr>`;
+          return `<tr><td>${escapeHtml(hold.title)}${place}</td><td class="queue">⏳ ${escapeHtml(label)}</td></tr>`;
         }
         const by = parseDate(hold.pickup_by);
         const status = by ? `${t.ready}, ${t.pickupBy(shortDate(by, false))}` : t.ready;
-        return `<tr><td><b>${escapeHtml(hold.title)}</b></td><td class="ready">📚 ${escapeHtml(status)}</td></tr>`;
+        return `<tr><td><b>${escapeHtml(hold.title)}</b>${place}</td><td class="ready">📚 ${escapeHtml(status)}</td></tr>`;
       })
       .join("");
     return `${this._heading(sensor)}

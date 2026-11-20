@@ -31,6 +31,13 @@ _QUEUE_ORDINAL_RE = re.compile(
     r"(?<![\d.])(\d{1,4})(?:\.|st|nd|rd|th)\s+(?:jonossa|in (?:the )?queue|i kön)",
     re.IGNORECASE,
 )
+# "Noutopaikka: Kannelmäki / Gamlas Luotu: 12.8.2026" -> "Kannelmäki / Gamlas"
+_PICKUP_PLACE_RE = re.compile(
+    r"(?:noutopaikka|pick ?up (?:location|library)|avhämtningsställe)\s*:?\s*(.+?)"
+    r"(?=\s+(?:luotu|created|skapad|sijainti jonossa|queue|noudettava|voimassa|valid|"
+    r"giltig|muokkaa|edit|tila|status|haluatko|varausnumero|eräpäivä)\b|$)",
+    re.IGNORECASE,
+)
 _ROW_SELECTORS = ".myresearch-row, li.result, div.result, tr.myresearch-row"
 _TITLE_SELECTORS = ".record-title, a.title, .title, h2 a, h3 a, h2, h3"
 
@@ -52,6 +59,7 @@ class Hold:
     pickup_by: date | None
     queue_position: int | None = None
     queue_length: int | None = None
+    pickup_location: str | None = None
 
 
 def parse_csrf(html: str) -> str | None:
@@ -158,7 +166,9 @@ def parse_holds(html: str) -> list[Hold]:
         ready = bool(_READY_RE.search(text))
         pickup_by = _find_date(text, _PICKUP_BY_RE) if ready else None
         position, length = (None, None) if ready else _queue(text)
-        holds.append(Hold(title, ready, pickup_by, position, length))
+        place = _PICKUP_PLACE_RE.search(text)
+        location = place.group(1).strip(" :") if place else None
+        holds.append(Hold(title, ready, pickup_by, position, length, location or None))
     holds.sort(
         key=lambda hold: (not hold.ready, hold.pickup_by is None, hold.pickup_by or date.max)
     )

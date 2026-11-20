@@ -121,3 +121,16 @@ def test_queue_position_real_helmet_row():
         "Luotu: 12.8.2026 Sijainti jonossa: 38 / 77 Muokkaa"
     )
     assert _queue_of(row) == (38, 77)
+
+
+def test_pickup_location():
+    def location(text):
+        html = f'<li class="result"><a class="title">T</a> {text}</li>'
+        return parser.parse_holds(html)[0].pickup_location
+
+    assert location(
+        "Valitse DVD Noutopaikka: Kannelmäki / Gamlas Luotu: 12.8.2026 Sijainti jonossa: 2 / 5"
+    ) == "Kannelmäki / Gamlas"
+    assert location("Noudettavissa Noutopaikka: Itäkeskus Noudettava viimeistään 1.12.2026") == "Itäkeskus"
+    assert location("Pickup location: Oodi Created: 1.1.2026") == "Oodi"
+    assert location("Jonossa: 3") is None
