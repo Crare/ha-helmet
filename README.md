@@ -109,3 +109,7 @@ name or loans.**
 python -m pip install beautifulsoup4 pytest
 python -m pytest tests
 ```
+
+## License
+
+MIT. See [LICENSE](LICENSE).
