@@ -1,11 +1,15 @@
-# Markdown card listing each person's reservations; ones ready for pickup come
-# first with the last pickup day. Edit `people` as in loans-card.yaml.
+# Markdown card listing the reservations of every Helmet library card added to
+# Home Assistant; ready ones first with the last pickup day. No editing needed.
 type: markdown
 title: Library reservations
 content: |-
-  {%- set people = [('anna', 'Anna'), ('mikko', 'Mikko'), ('ella', 'Ella')] -%}
-  {%- for id, name in people -%}
-  {%- set holds = state_attr('sensor.' ~ id ~ '_reservations', 'holds') or [] %}
+  {%- set ns = namespace(ids=[]) -%}
+  {%- for id in integration_entities('helmet') | sort -%}
+  {%- if state_attr(id, 'holds') is not none and state_attr(id, 'waiting') is none %}{% set ns.ids = ns.ids + [id] %}{% endif -%}
+  {%- endfor -%}
+  {%- for id in ns.ids -%}
+  {%- set name = (state_attr(id, 'friendly_name') or id) | replace(' Reservations', '') | replace(' Varaukset', '') -%}
+  {%- set holds = state_attr(id, 'holds') or [] %}
 
   ### {{ name }} ({{ holds | count }})
 
@@ -22,4 +26,6 @@ content: |-
   {%- else -%}
   No reservations
   {%- endif %}
-  {% endfor -%}
+  {% else -%}
+  No Helmet library cards found. Add one under Settings → Devices & services.
+  {%- endfor -%}

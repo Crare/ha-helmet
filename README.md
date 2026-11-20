@@ -62,9 +62,9 @@ Two ready-made Markdown cards are in [`dashboard/`](dashboard):
 - [`reservations-card.yaml`](dashboard/reservations-card.yaml): each person's
   reservations, ready ones first with the last pickup day.
 
-To add one: Edit dashboard → Add card → **Manual**, paste the file's contents and
-change the `people` list at the top to your sensors' entity IDs and names
-(`sensor.anna_loans` → `('anna', 'Anna')`).
+To add one: Edit dashboard → Add card → **Manual** and paste the file's contents.
+No editing needed: the cards find every Helmet library card added to Home Assistant
+and use each card's name as the heading.
 
 ## Notification when a reservation is ready
 

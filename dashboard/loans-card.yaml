@@ -1,12 +1,15 @@
-# Markdown card listing each person's loans with due dates.
-# Edit `people`: the first value is the start of the sensor's entity ID
-# (sensor.anna_loans -> anna), the second is the name shown.
+# Markdown card listing the loans of every Helmet library card added to
+# Home Assistant, with due dates. No editing needed: it finds the sensors itself.
 type: markdown
 title: Library loans
 content: |-
-  {%- set people = [('anna', 'Anna'), ('mikko', 'Mikko'), ('ella', 'Ella')] -%}
-  {%- for id, name in people -%}
-  {%- set loans = state_attr('sensor.' ~ id ~ '_loans', 'loans') or [] %}
+  {%- set ns = namespace(ids=[]) -%}
+  {%- for id in integration_entities('helmet') | sort -%}
+  {%- if state_attr(id, 'loans') is not none %}{% set ns.ids = ns.ids + [id] %}{% endif -%}
+  {%- endfor -%}
+  {%- for id in ns.ids -%}
+  {%- set name = (state_attr(id, 'friendly_name') or id) | replace(' Loans', '') | replace(' Lainat', '') -%}
+  {%- set loans = state_attr(id, 'loans') or [] %}
 
   ### {{ name }} ({{ loans | count }})
 
@@ -25,4 +28,6 @@ content: |-
   {%- else -%}
   No loans
   {%- endif %}
-  {% endfor -%}
+  {% else -%}
+  No Helmet library cards found. Add one under Settings → Devices & services.
+  {%- endfor -%}
