@@ -3,10 +3,11 @@
   "name": "Helmet library loans",
   "codeowners": ["@Crare"],
   "config_flow": true,
+  "dependencies": ["frontend", "http"],
   "documentation": "https://github.com/Crare/ha-helmet",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/Crare/ha-helmet/issues",
   "requirements": ["beautifulsoup4"],
-  "version": "0.1.2"
+  "version": "0.2.0"
 }

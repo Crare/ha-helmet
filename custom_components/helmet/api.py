@@ -7,7 +7,7 @@ from typing import Any
 
 import aiohttp
 
-from .const import BASE_URL, LIBRARY_TARGET
+from .const import BASE_URL, LIBRARY_TARGET, VERSION
 from .parser import (
     Hold,
     parse_alerts,
@@ -24,7 +24,7 @@ _TIMEOUT = aiohttp.ClientTimeout(total=30)
 # helmet.finna.fi answers 403 to crawler-style user agents (brackets, links,
 # "compatible;", default Python/curl ones). A plain product token is accepted
 # and still says honestly which client this is.
-_HEADERS = {"User-Agent": "HomeAssistant-Helmet/0.1.2", "Accept-Language": "fi"}
+_HEADERS = {"User-Agent": f"HomeAssistant-Helmet/{VERSION}", "Accept-Language": "fi"}
 
 
 class HelmetError(Exception):

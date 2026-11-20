@@ -55,16 +55,28 @@ Entity IDs follow the name you gave, e.g. `sensor.anna_loans`.
 
 ## Dashboard cards
 
-Two ready-made Markdown cards are in [`dashboard/`](dashboard):
+The integration includes two cards. After installing and restarting, open
+Edit dashboard → **Add card** and search for **Helmet**:
 
-- [`loans-card.yaml`](dashboard/loans-card.yaml): each person's loans with due date
-  and days left (🟠 within 3 days, 🔴 overdue).
-- [`reservations-card.yaml`](dashboard/reservations-card.yaml): each person's
-  reservations, ready ones first with the last pickup day.
+- **Helmet loans** (`custom:helmet-loans-card`): every library card's loans with due
+  date and days left (orange within 3 days, red when overdue).
+- **Helmet reservations** (`custom:helmet-reservations-card`): every library card's
+  reservations; ready ones first with the last pickup day.
 
-To add one: Edit dashboard → Add card → **Manual** and paste the file's contents.
-No editing needed: the cards find every Helmet library card added to Home Assistant
-and use each card's name as the heading.
+They find all Helmet library cards by themselves, use each card's name as the
+heading, and show Finnish or English text depending on your Home Assistant language.
+The only option is `title`:
+
+```yaml
+type: custom:helmet-loans-card
+title: Kirjaston lainat
+```
+
+If a browser keeps showing an old version of the cards after an update, reload the
+page (on the phone app: Settings → Companion app → Debugging → Reset frontend cache).
+
+Plain Markdown versions of both cards, without the integration's frontend file, are
+in [`dashboard/`](dashboard).
 
 ## Notification when a reservation is ready
 
