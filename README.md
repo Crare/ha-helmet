@@ -1,13 +1,20 @@
 # Helmet library loans for Home Assistant
 
+> [!WARNING]
+> **Unofficial and not supported by Helmet. Use at your own risk.**
+>
+> This integration is not affiliated with or endorsed by the Helmet libraries or the
+> National Library of Finland. The [helmet.finna.fi terms of use](https://helmet.finna.fi/Content/terms)
+> prohibit automated use of features that require signing in, and this integration
+> signs in automatically. Helmet has no official API for personal loan data. Permission
+> and an official API are being requested from Helmet. Until they are granted, Helmet may
+> block access or your library card, and the integration may stop working at any time.
+
 Shows your [Helmet](https://helmet.finna.fi/) library loans with due dates, and
 reservations that are ready for pickup, as Home Assistant sensors. Add it once per
 library card, so a whole family can be followed on one dashboard.
 
 ![Helmet loans and reservations cards with example data](docs/helmet-cards.png)
-
-> Unofficial. Not affiliated with or endorsed by the Helmet libraries or the National
-> Library of Finland.
 
 ## How it works
 
