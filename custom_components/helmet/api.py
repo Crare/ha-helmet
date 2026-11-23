@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import aiohttp
+from yarl import URL
 
 from .const import BASE_URL, LIBRARY_TARGET, VERSION
 from .parser import (
@@ -25,6 +26,9 @@ _TIMEOUT = aiohttp.ClientTimeout(total=30)
 # "compatible;", default Python/curl ones). A plain product token is accepted
 # and still says honestly which client this is.
 _HEADERS = {"User-Agent": f"HomeAssistant-Helmet/{VERSION}", "Accept-Language": "fi"}
+# The only origin (https, host, port) that may see requests or the login form.
+_ORIGIN = URL(BASE_URL).origin()
+_MAX_LOGIN_REDIRECTS = 5
 
 
 class HelmetError(Exception):
@@ -76,14 +80,42 @@ class HelmetClient:
             raise HelmetError(f"Could not reach {BASE_URL}: {err}") from err
 
     async def _get(self, session: aiohttp.ClientSession, path: str) -> str:
-        async with session.get(f"{BASE_URL}{path}") as resp:
+        async with session.get(f"{_ORIGIN}{path}") as resp:
+            _check_origin(resp.url)
             resp.raise_for_status()
             return await resp.text()
 
     async def _ajax(self, session: aiohttp.ClientSession, method: str) -> Any:
-        async with session.get(f"{BASE_URL}/AJAX/JSON", params={"method": method}) as resp:
+        async with session.get(f"{_ORIGIN}/AJAX/JSON", params={"method": method}) as resp:
+            _check_origin(resp.url)
             resp.raise_for_status()
             return await resp.json(content_type=None)
+
+    async def _post_login(self, session: aiohttp.ClientSession, form: dict[str, str]) -> str:
+        """POST the login form without letting the card number and PIN leave the site.
+
+        aiohttp would resend the form body on a 307/308 redirect, even to another
+        host. Redirects are therefore followed by hand: only within the site, and
+        only as a GET without the form.
+        """
+        url = _ORIGIN / "MyResearch" / "Home"
+        resp = await session.post(url, data=form, allow_redirects=False)
+        for _ in range(_MAX_LOGIN_REDIRECTS + 1):
+            async with resp:
+                if resp.status not in (301, 302, 303, 307, 308):
+                    resp.raise_for_status()
+                    return await resp.text()
+                location = resp.headers.get("Location")
+                if not location:
+                    raise HelmetError("Login answered a redirect without a location")
+                try:
+                    url = resp.url.join(URL(location))
+                except ValueError as err:
+                    raise HelmetError("Login answered an invalid redirect location") from err
+                _check_origin(url)
+            resp = await session.get(url, allow_redirects=False)
+        resp.release()
+        raise HelmetError("Too many redirects after login")
 
     async def _login(self, session: aiohttp.ClientSession) -> None:
         csrf = parse_csrf(
@@ -99,12 +131,10 @@ class HelmetClient:
             "csrf": csrf,
             "processLogin": "Kirjaudu",
         }
-        async with session.post(f"{BASE_URL}/MyResearch/Home", data=form) as resp:
-            resp.raise_for_status()
-            page = await resp.text()
-            if is_login_form(page):
-                message = "; ".join(parse_alerts(page)) or "no message"
-                raise HelmetAuthError(f"Helmet did not accept the login: {message}")
+        page = await self._post_login(session, form)
+        if is_login_form(page):
+            message = "; ".join(parse_alerts(page)) or "no message"
+            raise HelmetAuthError(f"Helmet did not accept the login: {message}")
 
     async def _read(self, session: aiohttp.ClientSession) -> HelmetData:
         loan_counts = parse_loan_summary(await self._ajax(session, "getUserTransactions"))
@@ -119,3 +149,9 @@ class HelmetClient:
             holds=parse_holds(await self._get(session, "/Holds/List?lng=fi")),
             holds_ready=hold_counts["available"],
         )
+
+
+def _check_origin(url: URL) -> None:
+    """Refuse anything that is not on the library site (same scheme, host, port)."""
+    if url.origin() != _ORIGIN:
+        raise HelmetError(f"Refusing to follow {_ORIGIN} to another site: {url.origin()}")

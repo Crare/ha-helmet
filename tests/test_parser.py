@@ -1,4 +1,4 @@
-"""Parser tests. Run: python -m pytest tests (needs beautifulsoup4 and pytest)."""
+"""Parser tests. Run: python -m pytest tests (needs aiohttp, beautifulsoup4 and pytest)."""
 
 import importlib.util
 import sys
